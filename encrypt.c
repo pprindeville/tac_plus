@@ -87,22 +87,18 @@ md5_xor(HDR *hdr, u_char *data, char *key)
 	create_md5_hash(session_id, key, version, seq_no, prev_hashp, hash);
 
 	if (debug & DEBUG_MD5_HASH_FLAG) {
-	    int k;
-
 	    report(LOG_DEBUG,
-		   "hash: session_id=%u, key=%s, version=%d, seq_no=%d",
-		   session_id, key, version, seq_no);
+		   "hash: session_id=%u (0x%08x), key=%s, version=%d, seq_no=%d",
+		   htonl(session_id), htonl(session_id), key, version, seq_no);
 	    if (prev_hashp) {
 		report(LOG_DEBUG, "prev_hash:");
-		for (k = 0; k < TAC_MD5_DIGEST_LEN; k++)
-		    report(LOG_DEBUG, "0x%x", prev_hashp[k]);
+		report_hex(LOG_DEBUG, prev_hashp, TAC_MD5_DIGEST_LEN);
 	    } else {
 		report(LOG_DEBUG, "no prev. hash");
 	    }
 
 	    report(LOG_DEBUG, "hash: ");
-	    for (k = 0; k < TAC_MD5_DIGEST_LEN; k++)
-		report(LOG_DEBUG, "0x%x", hash[k]);
+	    report_hex(LOG_DEBUG, hash, TAC_MD5_DIGEST_LEN);
 	}
 	memcpy(last_hash, hash, TAC_MD5_DIGEST_LEN);
 	prev_hashp = last_hash;
@@ -117,7 +113,7 @@ md5_xor(HDR *hdr, u_char *data, char *key)
 	    }
 	    if (debug & DEBUG_XOR_FLAG) {
 		report(LOG_DEBUG,
-		       "data[%d] = 0x%x, xor'ed with hash[%d] = 0x%x -> 0x%x\n",
+		       "data[%d] = 0x%02x, xor'ed with hash[%d] = 0x%02x -> 0x%02x",
 		       i + j,
 		       data[i + j],
 		       j,

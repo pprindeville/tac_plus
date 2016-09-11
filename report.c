@@ -59,19 +59,24 @@ report(priority, fmt, va_alist)
 #endif
 {
     char msg[4096];		/* temporary string */
+    size_t nchars;
+    FILE *mem;
     va_list ap;
-    int ret;
+
+    mem = fmemopen(msg, sizeof(msg), "w");
 
 #ifdef __STDC__
     va_start(ap, fmt);
 #else
     va_start(ap);
 #endif
-    ret = vsnprintf(msg, sizeof(msg), fmt, ap);
+    vfprintf(mem, fmt, ap);
     va_end(ap);
 
-    if (ret < 0)
-      msg[0] = '\0';
+    fflush(mem);
+    nchars = ftell(mem);
+
+    fclose(mem);
 
     if (console) {
 	if (!ostream)
@@ -80,7 +85,8 @@ report(priority, fmt, va_alist)
 	if (ostream) {
 	    if (priority == LOG_ERR)
 		fprintf(ostream, "Error ");
-	    fprintf(ostream, "%s\n", msg);
+	    fwrite(msg, nchars, 1, ostream);
+	    fputc('\n', ostream);
 	} else
 	    syslog(LOG_ERR, "Cannot open /dev/console errno=%d", errno);
     }
@@ -90,24 +96,27 @@ report(priority, fmt, va_alist)
 
 	logfd = open(logfile, O_CREAT | O_WRONLY | O_APPEND, 0644);
 	if (logfd >= 0) {
-	    char buf[512];
 	    time_t t = time(NULL);
 	    char *ct = ctime(&t);
+	    FILE *flog;
 
 	    ct[24] = '\0';
+
 	    tac_lockfd(logfile, logfd);
-	    sprintf(buf, "%s [%ld]: ", ct, (long)getpid());
-	    write(logfd, buf, strlen(buf));
+	    flog = fdopen(logfd, "a");
+
+	    fprintf(flog, "%s [%ld]: ", ct, (long)getpid());
 	    if (priority == LOG_ERR)
-		write(logfd, "Error ", 6);
-	    write(logfd, msg, strlen(msg));
-	    write(logfd, "\n", 1);
-	    close(logfd);
+		fputs("Error ", flog);
+	    fwrite(msg, nchars, 1, flog);
+	    fputc('\n', flog);
+	    fclose(flog);
 	}
     }
 
     if (single) {
-	fprintf(stderr, "%s\n", msg);
+	fwrite(msg, nchars, 1, stderr);
+	fputc('\n', stderr);
     }
 
     if (priority == LOG_ERR)
@@ -121,31 +130,34 @@ void
 report_hex(int priority, u_char *p, int len)
 {
     char buf[256];
-    char digit[10];
-    int buflen;
-    int i;
+    unsigned i;
+    FILE *mem;
 
     if (len <= 0)
 	return;
 
-    buf[0] = '\0';
-    buflen = 0;
-    for (i = 0; i < len && i < 255; i++, p++) {
+    mem = fmemopen(buf, sizeof(buf), "w");
 
-	sprintf(digit, "0x%x ", *p);
-	strcat(buf, digit);
-	buflen += strlen(digit);
+    if (len > 255)
+	len = 255;
 
-	if (buflen > 75) {
+    for (i = 0; i < len; i++, p++) {
+
+	fprintf(mem, "0x%02x ", *p);
+
+	if (ftell(mem) > 75) {
+	    fflush(mem);
 	    report(priority, "%s", buf);
-	    buf[0] = '\0';
-	    buflen = 0;
+	    rewind(mem);
 	}
     }
 
-    if (buf[0]) {
+    if (ftell(mem) > 0) {
+	fflush(mem);
 	report(priority, "%s", buf);
     }
+
+    fclose(mem);
 
     return;
 }
@@ -155,8 +167,8 @@ void
 report_string(int priority, u_char *p, int len)
 {
     char buf[256];
-    char *bufp = buf;
     int i, n;
+    FILE *mem;
 
     if (len <= 0)
 	return;
@@ -164,20 +176,21 @@ report_string(int priority, u_char *p, int len)
     if (len > 255)
 	len = 255;
 
-    for (i = 0; i < len; i++) {
+    mem = fmemopen(buf, sizeof(buf), "w");
+
+    for (i = n = 0; i < len && n < len; i++, p++) {
 	/* ASCII printable, else ... */
 	if (32 <= *p && *p <= 126) {
-	    *bufp++ = *p++;
+	    fputc(*p, mem);
+	    ++n;
 	} else {
-	    n = snprintf(bufp, len - i, " 0x%x ", *p);
-	    if (n >= len - i)
-		break;
-	    bufp += n;
-	    i += n - 1;
-	    p++;
+	    fprintf(mem, " 0x%02x", *p);
+	    n += 6;
 	}
     }
-    *bufp = '\0';
+
+    fclose(mem);
+
     report(priority, "%s", buf);
 }
 

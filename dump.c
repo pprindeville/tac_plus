@@ -102,7 +102,7 @@ dump_header(u_char *pak)
     report(LOG_DEBUG, "PACKET: key=%s", session.key ? session.key : "<NULL>");
     report(LOG_DEBUG, "version %d (0x%x), type %d, seq no %d, flags 0x%x",
 	   hdr->version, hdr->version, hdr->type, hdr->seq_no, hdr->flags);
-    report(LOG_DEBUG, "session_id %u (0x%x), Data length %d (0x%x)",
+    report(LOG_DEBUG, "session_id %u (0x%08x), Data length %d (0x%x)",
 	   ntohl(hdr->session_id), ntohl(hdr->session_id),
 	   ntohl(hdr->datalength), ntohl(hdr->datalength));
 
