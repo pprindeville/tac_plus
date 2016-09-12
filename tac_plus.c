@@ -301,7 +301,7 @@ main(int argc, char **argv)
 	tac_exit(1);
     }
 
-    while ((c = getopt(argc, argv, "B:C:d:hiPp:Q:tGgvSsLl:m:w:U:u:")) != EOF)
+    while ((c = getopt(argc, argv, "B:C:d:hiPp:Q:tGgvSsLl:m:w:U:u:IT")) != EOF)
 	switch (c) {
 	case 'B':		/* bind() address*/
 	    bind_address = optarg;
@@ -365,6 +365,12 @@ main(int argc, char **argv)
 	    break;
 	case 'u':
 	    wtmpfile = tac_strdup(optarg);
+	    break;
+	case 'T':
+	    ts_format = REPORT_TS_UNIX;
+	    break;
+	case 'I':
+	    ts_format = REPORT_TS_ISO;
 	    break;
 
 	default:
@@ -850,7 +856,10 @@ usage(void)
 		"\t-S\tenable single-connection\n"
 		"\t-s\trefuse SENDPASS\n"
 		"\t-t\talso log to /dev/console\n"
-		"\t-v\tdisplay version information\n");
+		"\t-v\tdisplay version information\n"
+		"\t-T\tuse UNIX timestamps on stderr\n"
+		"\t-I\tuse ISO timetsamps on stderr\n"
+		);
 
     return;
 }
@@ -909,6 +918,9 @@ vers(void)
 #endif
 #ifdef MAXSESS_FINGER
     fprintf(stdout, "MAXSESS_FINGER\n");
+#endif
+#ifdef USE_STDERR_TIMESTAMPS
+    fprintf(stdout, "USE_STDERR_TIMESTAMPS\n");
 #endif
 #if MIPS
     fprintf(stdout, "MIPS\n");

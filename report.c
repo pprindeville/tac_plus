@@ -38,6 +38,8 @@ FILE *ostream = NULL;
 
 char *logfile = TACPLUS_LOGFILE;
 
+unsigned ts_format = REPORT_TS_UNIX;
+
 /* report:
  *
  * This routine reports errors and such via stderr and syslog() if
@@ -115,6 +117,20 @@ report(priority, fmt, va_alist)
     }
 
     if (single) {
+#ifdef USE_STDERR_TIMESTAMPS
+	switch (ts_format) {
+	case REPORT_TS_NONE:
+	    break;
+	case REPORT_TS_UNIX:
+	    fputs(tac_timestamp(), stderr);
+	    fputc(' ', stderr);
+	    break;
+	case REPORT_TS_ISO:
+	    fputs(tac_iso_timestamp(), stderr);
+	    fputc(' ', stderr);
+	    break;
+	}
+#endif
 	fwrite(msg, nchars, 1, stderr);
 	fputc('\n', stderr);
     }

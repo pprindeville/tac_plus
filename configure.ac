@@ -720,6 +720,30 @@ AC_ARG_WITH(prof,
 AC_SUBST(PROFLAGS)
 AC_SUBST(PROFLIBS)
 
+dnl
+dnl USE_STDERR_TIMESTAMPS - Turn on timestamping on logging to stderr
+dnl
+AC_MSG_CHECKING(whether to enable foreground logging of timestamps support)
+AH_TEMPLATE(USE_STDERR_TIMESTAMPS, [define this to enable support for including timestamps when foreground logging to stderr ])
+AC_ARG_ENABLE(stderr-timestamps,
+    AS_HELP_STRING([--enable-stderr-timestamps],[Log timestamps in stderr output in foreground mode]),
+[ case "$enable_stderr_timestamps" in
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(USE_STDERR_TIMESTAMPS)
+    ;;
+  *)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  # ie: no --{enable,disable}-stderr-timestamps option, withval == ""
+  AC_MSG_RESULT(no)
+)
+dnl AC_SUBST(USE_STDERR_TIMESTAMPS)
+
 # look for PAM
 AH_TEMPLATE(HAVE_PAM, [define if your system has libpam])
 AC_CHECK_LIB([pam], [pam_start],

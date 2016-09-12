@@ -241,3 +241,34 @@ tac_unlockfd(char *filename, int lockfd)
     }
     return(0);
 }
+
+const char *
+tac_timestamp()
+{
+    static char buf[16];
+    time_t now;
+    struct tm *tm;
+    static const char format[] = "%b %e %T";
+
+    time(&now);
+    tm = localtime(&now);
+    strftime(buf, sizeof(buf), format, tm);
+
+    return buf;
+}
+
+const char *
+tac_iso_timestamp()
+{
+    static char buf[17];
+    time_t now;
+    struct tm *tm;
+    static const char format[] = "%Y%m%dT%H%M%SZ";
+
+    time(&now);
+    tm = gmtime(&now);
+    strftime(buf, sizeof(buf), format, tm);
+
+    return buf;
+}
+

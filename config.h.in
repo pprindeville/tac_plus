@@ -266,6 +266,10 @@
 /* define this if your waitpid() takes an union wait status pointer */
 #undef UNIONWAIT
 
+/* define this to enable support for including timestamps when foreground
+   logging to stderr */
+#undef USE_STDERR_TIMESTAMPS
+
 /* Version number of package */
 #undef VERSION
 

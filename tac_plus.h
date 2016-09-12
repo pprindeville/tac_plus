@@ -326,6 +326,14 @@ void author(u_char *);
 int choose_authen(struct authen_data *, struct authen_type *);
 
 /* report.c */
+typedef enum {
+	REPORT_TS_NONE = 0,
+	REPORT_TS_UNIX,
+	REPORT_TS_ISO
+} ts_format_t;
+
+extern unsigned ts_format;
+
 void report_string(int, u_char *, int);
 void report_hex(int, u_char *, int);
 #ifdef __STDC__
@@ -342,6 +350,8 @@ char *tac_strdup(char *);
 char *tac_make_string(u_char *, int);
 char *tac_find_substring(char *, char *);
 char *tac_realloc(char *, int);
+const char *tac_timestamp(void);
+const char *tac_iso_timestamp(void);
 
 /* do_acct.c */
 int do_acct_file(struct acct_rec *);
