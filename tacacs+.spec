@@ -15,7 +15,7 @@ Source2: tac_plus.sysvinit
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: gcc, bison, flex, m4, pam-devel, tcp_wrappers-devel
-Requires: pam
+Requires: pam, perl
 
 
 %description
