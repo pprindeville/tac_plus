@@ -7,6 +7,12 @@ ACLOCAL_AMFLAGS=-I aconf
 
 @SET_MAKE@
 
+# scripts that are built
+build_scripts = tac_convert
+# scripts that are not-built/static
+static_scripts =
+
+bin_SCRIPTS = $(build_scripts) $(static_scripts)
 bin_PROGRAMS = tac_pwd
 sbin_PROGRAMS = tac_plus
 tac_pwd_SOURCES = tac_pwd.c
@@ -47,12 +53,7 @@ man_nogen_MANS = tac_pwd.8
 
 man_MANS = $(man_gen_MANS) $(man_nogen_MANS)
 
-# scripts that are built
-build_scripts= tac_convert
-# scripts that are not-built/static
-static_scripts =
-pkgdata_SCRIPTS = $(static_scripts) $(build_scripts)
-pkgdata_DATA= do_auth.py users_guide
+pkgdata_DATA = do_auth.py users_guide
 
 EXTRA_DIST = CHANGES COPYING FAQ INSTALL $(build_scripts:%=%.in) \
 		 $(man_nogen_MANS) do_auth.py tacacs+.spec users_guide.in

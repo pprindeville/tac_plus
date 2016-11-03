@@ -60,8 +60,8 @@ autoreconf -f -i
 %attr(0755,root,root) %{_initrddir}/tac_plus
 %{_bindir}/tac_pwd
 %{_sbindir}/tac_plus
+%{_bindir}/tac_convert
 %{_datadir}/tacacs+/users_guide
-%{_datadir}/tacacs+/tac_convert
 %{_datadir}/tacacs+/do_auth.py
 %{_datadir}/tacacs+/do_auth.pyc
 %{_datadir}/tacacs+/do_auth.pyo
