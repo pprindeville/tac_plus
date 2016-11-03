@@ -11,6 +11,7 @@ Vendor: Cisco
 %global name2 %(eval echo "%{name}" | %{__sed} -e 's/+$//')
 
 Source: %{name2}-%{version}.tar.gz
+Source2: tac_plus.sysvinit
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: gcc, bison, flex, m4, pam-devel, tcp_wrappers-devel
@@ -21,77 +22,6 @@ Requires: pam
 
 %prep -n %{name2}-%{version}
 %setup -n %{name2}-%{version}
-
-%{__cat} <<'EOF' >tac_plus.sysvinit
-#!/bin/bash
-#
-# /etc/rc.d/init.d/tac_plus
-#
-# chkconfig: 2345 86 14
-# description: TACACS+ Daemon
-
-# Define variables
-TACPLUS_PID=/var/run/tac_plus.pid
-TACPLUS_EXE=/usr/sbin/tac_plus
-TACPLUS_ARG=""
-TACPLUS_CNF=/etc/tac_plus.conf
-
-# Source function library.
-. /etc/rc.d/init.d/functions
-
-case "$1" in
-start)
-# Check to see if tac_plus is running.
-if [[ -f ${TACPLUS_PID} || -f /var/lock/subsys/tac_plus ]]; then
-	echo "tac_plus may already be running. Check for existing tac_plus processes."
-	exit 1
-fi
-echo -n "Starting tac_plus:"
-$TACPLUS_EXE $TACPLUS_ARG -C $TACPLUS_CNF && success || failure
-echo
-touch /var/lock/subsys/tac_plus
-;;
-stop)
-if [[ -f ${TACPLUS_PID} && -f /var/lock/subsys/tac_plus ]]; then
-	echo -n "Stopping tac_plus:"
-	killproc -p ${TACPLUS_PID}
-	echo
-	rm -f /var/lock/subsys/tac_plus
-	rm -f ${TACPLUS_PID}
-else
-	echo "tac_plus does not appear to be running."
-fi
-;;
-status)
-if [[ -f ${TACPLUS_PID} && -f /var/lock/subsys/tac_plus ]]; then
-       echo "tac_plus pid is `cat ${TACPLUS_PID}`"
-else
-        echo "tac_plus does not appear to be running."
-fi
-;;
-restart)
-$0 stop; $0 start
-;;
-reload)
-echo -n "Reloading tac_plus..."
-if [[ -f ${TACPLUS_PID} && -f /var/lock/subsys/tac_plus ]]; then
-	kill -HUP `cat ${TACPLUS_PID}`
-	RETVAL=$?
-fi
-if [ $RETVAL -ne 0 ]; then
-	failure
-else
-	success
-fi
-echo
-
-;;
-*)
-echo "Usage: $0 {start|stop|status|reload|restart}"
-exit 1
-;;
-esac
-EOF
 
 %build
 
@@ -108,7 +38,7 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 %install
 %{__rm} -rf %{buildroot}
 %makeinstall
-%{__install} -Dp -m0755 tac_plus.sysvinit %{buildroot}%{_initrddir}/tac_plus
+%{__install} -Dp -m0755 %{SOURCE2} %{buildroot}%{_initrddir}/tac_plus
 %{__mkdir} %{buildroot}%{_sbindir}
 %{__mv} %{buildroot}%{_bindir}/tac_plus %{buildroot}%{_sbindir}
 ### Clean up buildroot
