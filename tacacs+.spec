@@ -37,6 +37,7 @@ echo 'echo -n "%{name2}"' > aconf/package.sh
 echo 'echo -n "%{version}"' > aconf/version.sh
 %{__chmod} +x aconf/version.sh
 
+autoreconf -f -i
 %configure --enable-acls --enable-uenable
 %{__make}
 
@@ -59,8 +60,8 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 %attr(0755,root,root) %{_initrddir}/tac_plus
 %{_bindir}/tac_pwd
 %{_sbindir}/tac_plus
+%{_bindir}/tac_convert
 %{_datadir}/tacacs+/users_guide
-%{_datadir}/tacacs+/tac_convert
 %{_datadir}/tacacs+/do_auth.py
 %{_datadir}/tacacs+/do_auth.pyc
 %{_datadir}/tacacs+/do_auth.pyo
