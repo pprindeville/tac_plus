@@ -20,6 +20,11 @@ Requires: pam, perl
 
 %description
 
+%package devel
+Summary: Development files for %{name}
+
+%description devel
+
 %prep -n %{name2}-%{version}
 %setup -n %{name2}-%{version}
 
@@ -51,7 +56,7 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 
 %files
 
-%{_includedir}/tacacs.h
+%attr(0755,root,root) %{_initrddir}/tac_plus
 %{_bindir}/tac_pwd
 %{_sbindir}/tac_plus
 %{_datadir}/tacacs+/users_guide
@@ -64,9 +69,12 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 %{_mandir}/man8/tac_plus.8.gz
 %{_libdir}/libtacacs.so.1.0.0
 %{_libdir}/libtacacs.so.1
+
+%files devel
+
+%{_includedir}/tacacs.h
 %{_libdir}/libtacacs.so
 %{_libdir}/libtacacs.a
 %{_libdir}/libtacacs.la
-%attr(0755,root,root) %{_initrddir}/tac_plus
 
 %changelog
