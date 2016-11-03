@@ -8,7 +8,9 @@ License: Cisco
 Packager: Bruce Carleton <bruce.carleton@jasperwireless.com>
 Vendor: Cisco
 
-Source: %{name}-%{version}.tar.gz
+%global name2 %(eval echo "%{name}" | %{__sed} -e 's/+$//')
+
+Source: %{name2}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: gcc, bison, flex, m4, pam-devel, tcp_wrappers-devel
@@ -17,8 +19,8 @@ Requires: pam
 
 %description
 
-%prep
-%setup
+%prep -n %{name2}-%{version}
+%setup -n %{name2}-%{version}
 
 %{__cat} <<'EOF' >tac_plus.sysvinit
 #!/bin/bash
