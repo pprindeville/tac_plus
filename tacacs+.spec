@@ -19,11 +19,13 @@ Requires: pam, perl
 
 
 %description
+Tacacs+ server originally written by Lol Grant at Cisco.
 
 %package devel
 Summary: Development files for %{name}
 
 %description devel
+Development files (headers and libraries) for %{name}.
 
 %prep -n %{name2}-%{version}
 %setup -n %{name2}-%{version}
@@ -38,15 +40,13 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 %{__chmod} +x aconf/version.sh
 
 autoreconf -f -i
-%configure --enable-acls --enable-uenable
+%configure --enable-acls --enable-uenable --enable-warn
 %{__make}
 
 %install
 %{__rm} -rf %{buildroot}
-%makeinstall
+%make_install
 %{__install} -Dp -m0755 %{SOURCE2} %{buildroot}%{_initrddir}/tac_plus
-### Clean up buildroot
-%{__rm} -f %{buildroot}%{_infodir}/dir
 
 %post
 
@@ -74,6 +74,6 @@ autoreconf -f -i
 %{_includedir}/tacacs.h
 %{_libdir}/libtacacs.so
 %{_libdir}/libtacacs.a
-%{_libdir}/libtacacs.la
+%exclude %{_libdir}/libtacacs.la
 
 %changelog
