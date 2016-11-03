@@ -94,6 +94,14 @@ esac
 EOF
 
 %build
+
+# these 2 files aren't shipped with the tarball so we have
+# to generate them
+echo 'echo -n "%{name2}"' > aconf/package.sh
+%{__chmod} +x aconf/package.sh
+echo 'echo -n "%{version}"' > aconf/version.sh
+%{__chmod} +x aconf/version.sh
+
 %configure --enable-acls --enable-uenable
 %{__make}
 
