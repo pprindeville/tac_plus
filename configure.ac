@@ -16,6 +16,8 @@ AM_INIT_AUTOMAKE
 
 AM_MAINTAINER_MODE()
 
+AM_PATH_PYTHON([2.7])
+
 dnl AC_CONFIG_SUBDIRS(etc man share)
 
 # what OS

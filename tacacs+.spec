@@ -61,10 +61,8 @@ autoreconf -f -i
 %{_bindir}/tac_pwd
 %{_sbindir}/tac_plus
 %{_bindir}/tac_convert
-%{_datadir}/tacacs+/users_guide
-%{_datadir}/tacacs+/do_auth.py
-%{_datadir}/tacacs+/do_auth.pyc
-%{_datadir}/tacacs+/do_auth.pyo
+%{_docdir}/%{name2}/users_guide
+%{python_sitelib}/%{name2}/do_auth.py{,c,o}
 %{_mandir}/man5/tac_plus.conf.5.gz
 %{_mandir}/man8/tac_pwd.8.gz
 %{_mandir}/man8/tac_plus.8.gz

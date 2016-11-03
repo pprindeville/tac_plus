@@ -11,6 +11,7 @@ aconf/depcomp
 aconf/install-sh
 aconf/ltmain.sh
 aconf/missing
+aconf/py-compile
 aconf/*.m4
 configure
 .deps/
