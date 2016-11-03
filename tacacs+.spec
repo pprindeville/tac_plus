@@ -39,8 +39,6 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 %{__rm} -rf %{buildroot}
 %makeinstall
 %{__install} -Dp -m0755 %{SOURCE2} %{buildroot}%{_initrddir}/tac_plus
-%{__mkdir} %{buildroot}%{_sbindir}
-%{__mv} %{buildroot}%{_bindir}/tac_plus %{buildroot}%{_sbindir}
 ### Clean up buildroot
 %{__rm} -f %{buildroot}%{_infodir}/dir
 
