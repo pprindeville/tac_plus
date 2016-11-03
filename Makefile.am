@@ -15,6 +15,7 @@ static_scripts =
 bin_SCRIPTS = $(build_scripts) $(static_scripts)
 bin_PROGRAMS = tac_pwd
 sbin_PROGRAMS = tac_plus
+
 tac_pwd_SOURCES = tac_pwd.c
 tac_plus_SOURCES = acct.c authen.c author.c choose_authen.c config.c \
 	default_fn.c default_v0_fn.c do_acct.c do_author.c dump.c enable.c \
@@ -53,7 +54,9 @@ man_nogen_MANS = tac_pwd.8
 
 man_MANS = $(man_gen_MANS) $(man_nogen_MANS)
 
-pkgdata_DATA = do_auth.py users_guide
+pkgpython_PYTHON = do_auth.py
+
+doc_DATA = users_guide
 
 EXTRA_DIST = CHANGES COPYING FAQ INSTALL $(build_scripts:%=%.in) \
 		 $(man_nogen_MANS) do_auth.py tacacs+.spec users_guide.in
