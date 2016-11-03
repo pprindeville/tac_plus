@@ -15,7 +15,7 @@ Source2: tac_plus.sysvinit
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: gcc, bison, flex, m4, pam-devel, tcp_wrappers-devel
-Requires: pam
+Requires: pam, perl
 
 
 %description
@@ -32,6 +32,7 @@ echo 'echo -n "%{name2}"' > aconf/package.sh
 echo 'echo -n "%{version}"' > aconf/version.sh
 %{__chmod} +x aconf/version.sh
 
+autoreconf -f -i
 %configure --enable-acls --enable-uenable
 %{__make}
 
