@@ -14679,7 +14679,7 @@ $as_echo_n "checking whether to set gcc warnings... " >&6; }
 
 # Check whether --enable-warn was given.
 if test "${enable_warn+set}" = set; then :
-  enableval=$enable_warn;  case "$enable_debug" in
+  enableval=$enable_warn;  case "$enable_warn" in
   no)
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
@@ -14690,7 +14690,7 @@ $as_echo "no" >&6; }
   yes)
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes -Wall" >&5
 $as_echo "yes -Wall" >&6; }
-    WARN="-Wall"
+    WARN="-Wall -Wextra"
     $as_echo "#define WARN 1" >>confdefs.h
 
     ;;

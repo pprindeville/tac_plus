@@ -201,7 +201,7 @@ AC_MSG_CHECKING(whether to set gcc warnings)
 AH_TEMPLATE(WARN, [define this to set pedantic gcc warnings])
 AC_ARG_ENABLE(warn,
     AS_HELP_STRING([--enable-warn],[pedantic gcc warnings]),
-[ case "$enable_debug" in
+[ case "$enable_warn" in
   no)
     AC_MSG_RESULT(no)
     WARN=""
@@ -209,7 +209,7 @@ AC_ARG_ENABLE(warn,
     ;;
   yes)
     AC_MSG_RESULT([yes -Wall])
-    WARN="-Wall"
+    WARN="-Wall -Wextra"
     AC_DEFINE(WARN)
     ;;
   *)
