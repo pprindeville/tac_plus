@@ -1,7 +1,7 @@
 Summary: TACACS+ Daemon
 Name: tacacs+
 Group: Networking/Servers
-Version: F4.0.4.29
+Version: F4.0.4.29a
 Release: 2%{?dist}
 License: Cisco
 
