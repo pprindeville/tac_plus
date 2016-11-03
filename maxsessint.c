@@ -28,6 +28,7 @@
 #include <signal.h>
 
 
+#ifdef MAXSESS_FINGER
 /*
  * is_async()
  * Tell if the named NAS port is an async-like device.
@@ -44,6 +45,7 @@ is_async(char *portname)
     }
     return(0);
 }
+#endif
 
 /*
  * See if this user can have more sessions.

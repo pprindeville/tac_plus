@@ -123,7 +123,8 @@ handler(int signum)
 {
     /* report() is not reentrant-safe */
 #define RCVSIG_STR "Received signal\n"
-    (void)write(fileno(stderr), RCVSIG_STR, strlen(RCVSIG_STR));
+    fputs(RCVSIG_STR, stderr);
+    fflush(stderr);
     reinitialize = 1;
 #ifdef REARMSIGNAL
     signal(SIGUSR1, handler);

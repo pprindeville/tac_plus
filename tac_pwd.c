@@ -122,16 +122,13 @@ do_des(char *passwd, char *salt)
 char *
 do_md5(char *passwd, char *salt)
 {
-    static char hash[HASHBUFLEN];
+    char hash[HASHBUFLEN];
 
     if (salt == NULL)
 	salt = get_salt();
-    if (strlen(salt) > 2)
-	salt[2] = '\0';
-    snprintf(hash, HASHBUFLEN, "$1$%s$", salt);
-    strncpy(hash, crypt(passwd, hash), HASHBUFLEN);
+    snprintf(hash, HASHBUFLEN, "$1$%.*s$", 2, salt);
 
-    return hash;
+    return crypt(passwd, hash);
 }
 
 char *
@@ -201,15 +198,26 @@ main(int argc, char **argv)
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
     }
 
-    write(1, prompt, strlen(prompt));
-    n = read(0, pass, sizeof(pass));
-    pass[n-1] = '\0';
+    fputs(prompt, stdout);
+    fflush(stdout);
+    n = read(STDIN_FILENO, pass, sizeof(pass));
 
     if (opt_e) {
-	write(1, "\n", strlen("\n"));
+	fputc('\n', stdout);
 	t.c_lflag |= ECHO;
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
     }
+
+    /*
+     * Check for EOF without newline, errors, no data or an empty line,
+     * or too much data.
+     */
+    if (feof(stdin) || ferror(stdin) || n <= 1 || pass[n-1] != '\n') {
+	fprintf(stderr, "read: error collecting password\n");
+	exit(1);
+    }
+
+    pass[n-1] = '\0';
 
     if (opt_m) {
 	result = do_md5(pass, salt);
@@ -218,8 +226,8 @@ main(int argc, char **argv)
     } else {
 	result = do_des(pass, salt);
     }
-    write(1, result, strlen(result));
-    write(1, "\n", 1);
+    fputs(result, stdout);
+    fputc('\n', stdout);
 
     return(0);
 }
