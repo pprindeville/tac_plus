@@ -89,7 +89,7 @@ no_ip_des(union LR_block *block)
 
 	/* Expansion Permutation, E XOR K */
 	temp_f = block->LR[RR];	/* L/R reg. is R31,R0...R30 (D0-D31) format */
-	pre_S.AB[0] = temp_f & 0x3f3f3f3f ^ k_s->AB[0];	     /* S1S3S5S7 */
+	pre_S.AB[0] = (temp_f & 0x3f3f3f3f) ^ k_s->AB[0];	     /* S1S3S5S7 */
 	pre_S.AB[1] = ((temp_f >> 4 | temp_f << 28) & 0x3f3f3f3f) ^ k_s->AB[1];
 	k_s += shift;					     /* S2S4S6S8 */
 
@@ -104,7 +104,7 @@ no_ip_des(union LR_block *block)
 	block->LR[LL] = temp_f;		    /* update L register */
 
 	/* Repeat round (temp_f carried through) */
-	pre_S.AB[0] = temp_f & 0x3f3f3f3f ^ k_s->AB[0];
+	pre_S.AB[0] = (temp_f & 0x3f3f3f3f) ^ k_s->AB[0];
 	pre_S.AB[1] = ((temp_f >> 4 | temp_f << 28) & 0x3f3f3f3f) ^ k_s->AB[1];
 	k_s += shift;
 

@@ -202,11 +202,11 @@ Note: IOS versions preceding 11.2 will fail.
 .TP
 .B \-t
 Log all informational, debugging or error messages to
-.B
-/dev/console 
+.B /dev/console 
 in addition to logging to syslogd. Useful for debugging.
 .\"
-.TP \-U <setuid username>
+.TP
+.B \-U <setuid username>
 Specify the username or UID to
 .IR setuid(2).
 If the daemon was compiled with a specific UID, this option overrides that

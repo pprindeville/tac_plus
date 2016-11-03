@@ -197,6 +197,7 @@ default_fn(struct authen_data *data)
     switch (data->status) {
     case TAC_PLUS_AUTHEN_STATUS_ERROR:
 	return(0);
+
     case TAC_PLUS_AUTHEN_STATUS_FAIL:
 	if (session.peer)
 	    report(LOG_NOTICE, "login failure: %s %s (%s) %s",
@@ -206,6 +207,8 @@ default_fn(struct authen_data *data)
 	    report(LOG_NOTICE, "login failure: %s %s %s",
 		   name == NULL ? "unknown" : name,
 		   session.peerip, session.port);
+	return(0);
+
     case TAC_PLUS_AUTHEN_STATUS_PASS:
 	return(0);
 
