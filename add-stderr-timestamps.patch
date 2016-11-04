@@ -1,0 +1,201 @@
+commit 006ffbe18c791fe28642a9a6d44d3def89a3035a
+Author: Philip Prindeville <philipp@redfish-solutions.com>
+Date:   Sun Sep 11 22:41:48 2016 -0600
+
+    Add timestamps to stderr logging when running in foreground mode
+    
+    When debugging certain issues (like shutting down idle client
+    connections, etc) it's useful to have timestamps on the logging
+    output, even when running in single-threaded mode (option -g).
+---
+ configure.ac | 24 ++++++++++++++++++++++++
+ report.c     | 16 ++++++++++++++++
+ tac_plus.c   | 16 ++++++++++++++--
+ tac_plus.h   | 10 ++++++++++
+ utils.c      | 31 +++++++++++++++++++++++++++++++
+ 5 files changed, 95 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index c9ecf95..7ad9083 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -722,6 +722,30 @@ AC_ARG_WITH(prof,
+ AC_SUBST(PROFLAGS)
+ AC_SUBST(PROFLIBS)
+ 
++dnl
++dnl USE_STDERR_TIMESTAMPS - Turn on timestamping on logging to stderr
++dnl
++AC_MSG_CHECKING(whether to enable foreground logging of timestamps support)
++AH_TEMPLATE(USE_STDERR_TIMESTAMPS, [define this to enable support for including timestamps when foreground logging to stderr ])
++AC_ARG_ENABLE(stderr-timestamps,
++    AS_HELP_STRING([--enable-stderr-timestamps],[Log timestamps in stderr output in foreground mode]),
++[ case "$enable_stderr_timestamps" in
++  no)
++    AC_MSG_RESULT(no)
++    ;;
++  yes)
++    AC_MSG_RESULT(yes)
++    AC_DEFINE(USE_STDERR_TIMESTAMPS)
++    ;;
++  *)
++    AC_MSG_RESULT(no)
++    ;;
++  esac ],
++  # ie: no --{enable,disable}-stderr-timestamps option, withval == ""
++  AC_MSG_RESULT(no)
++)
++dnl AC_SUBST(USE_STDERR_TIMESTAMPS)
++
+ # look for PAM
+ AH_TEMPLATE(HAVE_PAM, [define if your system has libpam])
+ AC_CHECK_LIB([pam], [pam_start],
+diff --git a/report.c b/report.c
+index d7982c5..3c76381 100644
+--- a/report.c
++++ b/report.c
+@@ -38,6 +38,8 @@ FILE *ostream = NULL;
+ 
+ char *logfile = TACPLUS_LOGFILE;
+ 
++unsigned ts_format = REPORT_TS_UNIX;
++
+ /* report:
+  *
+  * This routine reports errors and such via stderr and syslog() if
+@@ -115,6 +117,20 @@ report(priority, fmt, va_alist)
+     }
+ 
+     if (single) {
++#ifdef USE_STDERR_TIMESTAMPS
++	switch (ts_format) {
++	case REPORT_TS_NONE:
++	    break;
++	case REPORT_TS_UNIX:
++	    fputs(tac_timestamp(), stderr);
++	    fputc(' ', stderr);
++	    break;
++	case REPORT_TS_ISO:
++	    fputs(tac_iso_timestamp(), stderr);
++	    fputc(' ', stderr);
++	    break;
++	}
++#endif
+ 	fwrite(msg, nchars, 1, stderr);
+ 	fputc('\n', stderr);
+     }
+diff --git a/tac_plus.c b/tac_plus.c
+index 46041b6..a31dbb8 100644
+--- a/tac_plus.c
++++ b/tac_plus.c
+@@ -302,7 +302,7 @@ main(int argc, char **argv)
+ 	tac_exit(1);
+     }
+ 
+-    while ((c = getopt(argc, argv, "B:C:d:hiPp:Q:tGgvSsLl:m:w:U:u:")) != EOF)
++    while ((c = getopt(argc, argv, "B:C:d:hiPp:Q:tGgvSsLl:m:w:U:u:IT")) != EOF)
+ 	switch (c) {
+ 	case 'B':		/* bind() address*/
+ 	    bind_address = optarg;
+@@ -367,6 +367,12 @@ main(int argc, char **argv)
+ 	case 'u':
+ 	    wtmpfile = tac_strdup(optarg);
+ 	    break;
++	case 'T':
++	    ts_format = REPORT_TS_UNIX;
++	    break;
++	case 'I':
++	    ts_format = REPORT_TS_ISO;
++	    break;
+ 
+ 	default:
+ 	    fprintf(stderr, "%s: bad switch %c\n", progname, c);
+@@ -851,7 +857,10 @@ usage(void)
+ 		"\t-S\tenable single-connection\n"
+ 		"\t-s\trefuse SENDPASS\n"
+ 		"\t-t\talso log to /dev/console\n"
+-		"\t-v\tdisplay version information\n");
++		"\t-v\tdisplay version information\n"
++		"\t-T\tuse UNIX timestamps on stderr\n"
++		"\t-I\tuse ISO timetsamps on stderr\n"
++		);
+ 
+     return;
+ }
+@@ -911,6 +920,9 @@ vers(void)
+ #ifdef MAXSESS_FINGER
+     fprintf(stdout, "MAXSESS_FINGER\n");
+ #endif
++#ifdef USE_STDERR_TIMESTAMPS
++    fprintf(stdout, "USE_STDERR_TIMESTAMPS\n");
++#endif
+ #if MIPS
+     fprintf(stdout, "MIPS\n");
+ #endif
+diff --git a/tac_plus.h b/tac_plus.h
+index 205f632..d8f35c3 100644
+--- a/tac_plus.h
++++ b/tac_plus.h
+@@ -326,6 +326,14 @@ void author(u_char *);
+ int choose_authen(struct authen_data *, struct authen_type *);
+ 
+ /* report.c */
++typedef enum {
++	REPORT_TS_NONE = 0,
++	REPORT_TS_UNIX,
++	REPORT_TS_ISO
++} ts_format_t;
++
++extern unsigned ts_format;
++
+ void report_string(int, u_char *, int);
+ void report_hex(int, u_char *, int);
+ #ifdef __STDC__
+@@ -342,6 +350,8 @@ char *tac_strdup(char *);
+ char *tac_make_string(u_char *, int);
+ char *tac_find_substring(char *, char *);
+ char *tac_realloc(char *, int);
++const char *tac_timestamp(void);
++const char *tac_iso_timestamp(void);
+ 
+ /* do_acct.c */
+ int do_acct_file(struct acct_rec *);
+diff --git a/utils.c b/utils.c
+index 3b1ae59..d2919ff 100644
+--- a/utils.c
++++ b/utils.c
+@@ -241,3 +241,34 @@ tac_unlockfd(char *filename, int lockfd)
+     }
+     return(0);
+ }
++
++const char *
++tac_timestamp()
++{
++    static char buf[16];
++    time_t now;
++    struct tm *tm;
++    static const char format[] = "%b %e %T";
++
++    time(&now);
++    tm = localtime(&now);
++    strftime(buf, sizeof(buf), format, tm);
++
++    return buf;
++}
++
++const char *
++tac_iso_timestamp()
++{
++    static char buf[17];
++    time_t now;
++    struct tm *tm;
++    static const char format[] = "%Y%m%dT%H%M%SZ";
++
++    time(&now);
++    tm = gmtime(&now);
++    strftime(buf, sizeof(buf), format, tm);
++
++    return buf;
++}
++

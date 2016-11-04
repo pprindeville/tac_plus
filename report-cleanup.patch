@@ -1,0 +1,252 @@
+commit 1b9b419e3a63abc66a4ed4e7ae38c6fb4ec003fc
+Author: Philip Prindeville <philipp@redfish-solutions.com>
+Date:   Sun Sep 11 15:42:28 2016 -0600
+
+    Improve report() functionality by leveraging standard C libraries
+    
+    We don't need to do buffer management and overflow checking when
+    there are libraries which do this for us. Use fmemopen() to format
+    into a fixed-size buffer when using repeated *printf() calls.
+    
+    Make better use of the rich formatting capabilities of vfprintf().
+    
+    Be consistent in: displaying octets as 2 hex digits; displaying
+    session ids in both hex and decimal; displaying session ids in
+    network-byte order.
+    
+    Make better use of report_hex().  Don't do hex dumps (of packets,
+    buffers, etc) as 1 octet per line... that's just plain tedious.
+    
+    Capturing the return value of vfprintf() (in report()) is of
+    dubious value since it (report()) is a void function.
+    
+    Don't pass a formatted buffer through fprintf() a 2nd time as
+    "%s"... just use fwrite() instead.
+---
+ dump.c    |  2 +-
+ encrypt.c | 14 ++++-------
+ report.c  | 85 ++++++++++++++++++++++++++++++++++++---------------------------
+ 3 files changed, 55 insertions(+), 46 deletions(-)
+
+diff --git a/dump.c b/dump.c
+index db31e6a..f907bed 100644
+--- a/dump.c
++++ b/dump.c
+@@ -102,7 +102,7 @@ dump_header(u_char *pak)
+     report(LOG_DEBUG, "PACKET: key=%s", session.key ? session.key : "<NULL>");
+     report(LOG_DEBUG, "version %d (0x%x), type %d, seq no %d, flags 0x%x",
+ 	   hdr->version, hdr->version, hdr->type, hdr->seq_no, hdr->flags);
+-    report(LOG_DEBUG, "session_id %u (0x%x), Data length %d (0x%x)",
++    report(LOG_DEBUG, "session_id %u (0x%08x), Data length %d (0x%x)",
+ 	   ntohl(hdr->session_id), ntohl(hdr->session_id),
+ 	   ntohl(hdr->datalength), ntohl(hdr->datalength));
+ 
+diff --git a/encrypt.c b/encrypt.c
+index 5e4923b..dfccff7 100644
+--- a/encrypt.c
++++ b/encrypt.c
+@@ -87,22 +87,18 @@ md5_xor(HDR *hdr, u_char *data, char *key)
+ 	create_md5_hash(session_id, key, version, seq_no, prev_hashp, hash);
+ 
+ 	if (debug & DEBUG_MD5_HASH_FLAG) {
+-	    int k;
+-
+ 	    report(LOG_DEBUG,
+-		   "hash: session_id=%u, key=%s, version=%d, seq_no=%d",
+-		   session_id, key, version, seq_no);
++		   "hash: session_id=%u (0x%08x), key=%s, version=%d, seq_no=%d",
++		   htonl(session_id), htonl(session_id), key, version, seq_no);
+ 	    if (prev_hashp) {
+ 		report(LOG_DEBUG, "prev_hash:");
+-		for (k = 0; k < TAC_MD5_DIGEST_LEN; k++)
+-		    report(LOG_DEBUG, "0x%x", prev_hashp[k]);
++		report_hex(LOG_DEBUG, prev_hashp, TAC_MD5_DIGEST_LEN);
+ 	    } else {
+ 		report(LOG_DEBUG, "no prev. hash");
+ 	    }
+ 
+ 	    report(LOG_DEBUG, "hash: ");
+-	    for (k = 0; k < TAC_MD5_DIGEST_LEN; k++)
+-		report(LOG_DEBUG, "0x%x", hash[k]);
++	    report_hex(LOG_DEBUG, hash, TAC_MD5_DIGEST_LEN);
+ 	}
+ 	memcpy(last_hash, hash, TAC_MD5_DIGEST_LEN);
+ 	prev_hashp = last_hash;
+@@ -117,7 +113,7 @@ md5_xor(HDR *hdr, u_char *data, char *key)
+ 	    }
+ 	    if (debug & DEBUG_XOR_FLAG) {
+ 		report(LOG_DEBUG,
+-		       "data[%d] = 0x%x, xor'ed with hash[%d] = 0x%x -> 0x%x\n",
++		       "data[%d] = 0x%02x, xor'ed with hash[%d] = 0x%02x -> 0x%02x",
+ 		       i + j,
+ 		       data[i + j],
+ 		       j,
+diff --git a/report.c b/report.c
+index 6d10813..d7982c5 100644
+--- a/report.c
++++ b/report.c
+@@ -59,19 +59,24 @@ report(priority, fmt, va_alist)
+ #endif
+ {
+     char msg[4096];		/* temporary string */
++    size_t nchars;
++    FILE *mem;
+     va_list ap;
+-    int ret;
++
++    mem = fmemopen(msg, sizeof(msg), "w");
+ 
+ #ifdef __STDC__
+     va_start(ap, fmt);
+ #else
+     va_start(ap);
+ #endif
+-    ret = vsnprintf(msg, sizeof(msg), fmt, ap);
++    vfprintf(mem, fmt, ap);
+     va_end(ap);
+ 
+-    if (ret < 0)
+-      msg[0] = '\0';
++    fflush(mem);
++    nchars = ftell(mem);
++
++    fclose(mem);
+ 
+     if (console) {
+ 	if (!ostream)
+@@ -80,7 +85,8 @@ report(priority, fmt, va_alist)
+ 	if (ostream) {
+ 	    if (priority == LOG_ERR)
+ 		fprintf(ostream, "Error ");
+-	    fprintf(ostream, "%s\n", msg);
++	    fwrite(msg, nchars, 1, ostream);
++	    fputc('\n', ostream);
+ 	} else
+ 	    syslog(LOG_ERR, "Cannot open /dev/console errno=%d", errno);
+     }
+@@ -90,24 +96,27 @@ report(priority, fmt, va_alist)
+ 
+ 	logfd = open(logfile, O_CREAT | O_WRONLY | O_APPEND, 0644);
+ 	if (logfd >= 0) {
+-	    char buf[512];
+ 	    time_t t = time(NULL);
+ 	    char *ct = ctime(&t);
++	    FILE *flog;
+ 
+ 	    ct[24] = '\0';
++
+ 	    tac_lockfd(logfile, logfd);
+-	    sprintf(buf, "%s [%ld]: ", ct, (long)getpid());
+-	    write(logfd, buf, strlen(buf));
++	    flog = fdopen(logfd, "a");
++
++	    fprintf(flog, "%s [%ld]: ", ct, (long)getpid());
+ 	    if (priority == LOG_ERR)
+-		write(logfd, "Error ", 6);
+-	    write(logfd, msg, strlen(msg));
+-	    write(logfd, "\n", 1);
+-	    close(logfd);
++		fputs("Error ", flog);
++	    fwrite(msg, nchars, 1, flog);
++	    fputc('\n', flog);
++	    fclose(flog);
+ 	}
+     }
+ 
+     if (single) {
+-	fprintf(stderr, "%s\n", msg);
++	fwrite(msg, nchars, 1, stderr);
++	fputc('\n', stderr);
+     }
+ 
+     if (priority == LOG_ERR)
+@@ -121,32 +130,35 @@ void
+ report_hex(int priority, u_char *p, int len)
+ {
+     char buf[256];
+-    char digit[10];
+-    int buflen;
+-    int i;
++    unsigned i;
++    FILE *mem;
+ 
+     if (len <= 0)
+ 	return;
+ 
+-    buf[0] = '\0';
+-    buflen = 0;
+-    for (i = 0; i < len && i < 255; i++, p++) {
++    mem = fmemopen(buf, sizeof(buf), "w");
++
++    if (len > 255)
++	len = 255;
++
++    for (i = 0; i < len; i++, p++) {
+ 
+-	sprintf(digit, "0x%x ", *p);
+-	strcat(buf, digit);
+-	buflen += strlen(digit);
++	fprintf(mem, "0x%02x ", *p);
+ 
+-	if (buflen > 75) {
++	if (ftell(mem) > 75) {
++	    fflush(mem);
+ 	    report(priority, "%s", buf);
+-	    buf[0] = '\0';
+-	    buflen = 0;
++	    rewind(mem);
+ 	}
+     }
+ 
+-    if (buf[0]) {
++    if (ftell(mem) > 0) {
++	fflush(mem);
+ 	report(priority, "%s", buf);
+     }
+ 
++    fclose(mem);
++
+     return;
+ }
+ 
+@@ -155,8 +167,8 @@ void
+ report_string(int priority, u_char *p, int len)
+ {
+     char buf[256];
+-    char *bufp = buf;
+     int i, n;
++    FILE *mem;
+ 
+     if (len <= 0)
+ 	return;
+@@ -164,20 +176,21 @@ report_string(int priority, u_char *p, int len)
+     if (len > 255)
+ 	len = 255;
+ 
+-    for (i = 0; i < len; i++) {
++    mem = fmemopen(buf, sizeof(buf), "w");
++
++    for (i = n = 0; i < len && n < len; i++, p++) {
+ 	/* ASCII printable, else ... */
+ 	if (32 <= *p && *p <= 126) {
+-	    *bufp++ = *p++;
++	    fputc(*p, mem);
++	    ++n;
+ 	} else {
+-	    n = snprintf(bufp, len - i, " 0x%x ", *p);
+-	    if (n >= len - i)
+-		break;
+-	    bufp += n;
+-	    i += n - 1;
+-	    p++;
++	    fprintf(mem, " 0x%02x ", *p);
++	    n += 6;
+ 	}
+     }
+-    *bufp = '\0';
++
++    fclose(mem);
++
+     report(priority, "%s", buf);
+ }
+ 

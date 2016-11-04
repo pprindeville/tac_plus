@@ -12,6 +12,11 @@ Vendor: Cisco
 
 Source: %{name2}-%{version}.tar.gz
 Source2: tac_plus.sysvinit
+
+Patch0: md5-marshall-cleanup.patch
+Patch1: report-cleanup.patch
+Patch2: add-stderr-timestamps.patch
+
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires: gcc, bison, flex, m4, pam-devel, tcp_wrappers-devel
@@ -30,6 +35,10 @@ Development files (headers and libraries) for %{name}.
 %prep -n %{name2}-%{version}
 %setup -n %{name2}-%{version}
 
+%patch0 -p1 -b .md5
+%patch1 -p1 -b .report
+%patch2 -p1 -b .timestamp
+
 %build
 
 # these 2 files aren't shipped with the tarball so we have
@@ -40,7 +49,8 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 %{__chmod} +x aconf/version.sh
 
 autoreconf -f -i
-%configure --enable-acls --enable-uenable --enable-warn
+%configure --enable-acls --enable-uenable --enable-warn \
+	   --enable-stderr-timestamps
 %{__make}
 
 %install

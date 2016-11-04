@@ -1,0 +1,60 @@
+commit b1b652f475b0075d56e8a20bb6b2d6bc884e2997
+Author: Philip Prindeville <philipp@redfish-solutions.com>
+Date:   Sun Sep 11 15:41:00 2016 -0600
+
+    Avoid unnecessary marshalling when computing MD5 bitstream cipher
+    
+    MD5Update() can be called iteratively, so there's no need for the
+    data passed to it to be marshalled into contiguous storage.
+---
+ encrypt.c | 33 ++++++---------------------------
+ 1 file changed, 6 insertions(+), 27 deletions(-)
+
+diff --git a/encrypt.c b/encrypt.c
+index 90d4506..5e4923b 100644
+--- a/encrypt.c
++++ b/encrypt.c
+@@ -39,37 +39,16 @@ void
+ create_md5_hash(int session_id, char *key, u_char version, u_char seq_no,
+ 		u_char *prev_hash, u_char *hash)
+ {
+-    u_char *md_stream, *mdp;
+-    int md_len;
+     MD5_CTX mdcontext;
+ 
+-    md_len = sizeof(session_id) + strlen(key) + sizeof(version) +
+-	sizeof(seq_no);
+-
+-    if (prev_hash) {
+-	md_len += TAC_MD5_DIGEST_LEN;
+-    }
+-    mdp = md_stream = (u_char *) tac_malloc(md_len);
+-    memcpy(mdp, &session_id, sizeof(session_id));
+-    mdp += sizeof(session_id);
+-
+-    memcpy(mdp, key, strlen(key));
+-    mdp += strlen(key);
+-
+-    memcpy(mdp, &version, sizeof(version));
+-    mdp += sizeof(version);
+-
+-    memcpy(mdp, &seq_no, sizeof(seq_no));
+-    mdp += sizeof(seq_no);
+-
+-    if (prev_hash) {
+-	memcpy(mdp, prev_hash, TAC_MD5_DIGEST_LEN);
+-	mdp += TAC_MD5_DIGEST_LEN;
+-    }
+     MD5Init(&mdcontext);
+-    MD5Update(&mdcontext, md_stream, md_len);
++    MD5Update(&mdcontext, (u_char *)&session_id, sizeof(session_id));
++    MD5Update(&mdcontext, (u_char *)key, strlen(key));
++    MD5Update(&mdcontext, &version, sizeof(version));
++    MD5Update(&mdcontext, &seq_no, sizeof(seq_no));
++    if (prev_hash)
++	MD5Update(&mdcontext, prev_hash, TAC_MD5_DIGEST_LEN);
+     MD5Final(hash, &mdcontext);
+-    free(md_stream);
+     return;
+ }
+ 
