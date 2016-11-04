@@ -143,7 +143,7 @@ report(priority, fmt, va_alist)
 
 /* format a hex dump for syslog */
 void
-report_hex(int priority, u_char *p, int len)
+report_hex(int priority, u_char *p, unsigned len)
 {
     char buf[256];
     unsigned i;
@@ -180,10 +180,10 @@ report_hex(int priority, u_char *p, int len)
 
 /* format a non-null terminated string for syslog */
 void
-report_string(int priority, u_char *p, int len)
+report_string(int priority, u_char *p, unsigned len)
 {
     char buf[256];
-    int i, n;
+    unsigned i, n;
     FILE *mem;
 
     if (len <= 0)

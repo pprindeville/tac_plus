@@ -37,7 +37,7 @@ static pid_t my_popen(char *, int *, int *, int *);
 static int my_popen(char *, int *, int *, int *);
 #endif
 static char **read_args(int, int);
-static int read_string(int, char *, int);
+static int read_string(int, char *, unsigned);
 static char *substitute(char *, struct author_data *);
 #if HAVE_PID_T
 static int waitfor(pid_t);
@@ -349,7 +349,7 @@ my_popen(char *cmd, int *readfdp, int *writefdp, int *errorfdp)
  * number of bytes given.  Throw the rest away.
  */
 static int
-read_string(int fd, char *string, int len)
+read_string(int fd, char *string, unsigned len)
 {
     uint i, ret;
     char c;
@@ -450,7 +450,7 @@ call_pre_process(char *string, struct author_data *data, char ***outargsp,
 
     read_string(errorfd, error, err_len);
     if (error[0] != '\0') {
-	report(LOG_ERR, "Error from program (%d): \"%s\" ",
+	report(LOG_ERR, "Error from program (%zu): \"%s\" ",
 	       strlen(error), error);
     }
 

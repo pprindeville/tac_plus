@@ -83,7 +83,7 @@ static void
 write_record(char *name, FILE *fp, void *buf, int size, long offset)
 {
     if (fseek(fp, offset, SEEK_SET) < 0) {
-	report(LOG_ERR, "%s fd=%d Cannot seek to %d %s",
+	report(LOG_ERR, "%s fd=%d Cannot seek to %ld %s",
 	       name, fileno(fp), offset, strerror(errno));
     }
     if (fwrite(buf, size, 1, fp) != 1) {

@@ -37,7 +37,7 @@ author(u_char *pak)
     u_char *p;
     u_char *argsizep;
     char **cmd_argp;
-    int i, len;
+    unsigned i, len;
 
     if (debug & DEBUG_AUTHOR_FLAG)
 	report(LOG_DEBUG, "Start authorization request");
@@ -53,7 +53,7 @@ author(u_char *pak)
 
     /* Check if there's at least sizeof(struct author) of useful data */
     if (ntohl(hdr->datalength) < TAC_AUTHOR_REQ_FIXED_FIELDS_SIZE) {
-	report(LOG_ERR, "%s: author minimum payload length: %zu, got: %u",
+	report(LOG_ERR, "%s: author minimum payload length: %u, got: %u",
 	       session.peer, TAC_AUTHOR_REQ_FIXED_FIELDS_SIZE,
 	       ntohl(hdr->datalength));
 	send_error_reply(TAC_PLUS_AUTHOR, NULL);
@@ -68,16 +68,16 @@ author(u_char *pak)
     len += apak->user_len + apak->port_len + apak->rem_addr_len + apak->arg_cnt;
   
     /* Is there enough space for apak->arg_cnt arguments? */
-    if (ntohl(hdr->datalength) <
+    if (ntohl(hdr->datalength) < (unsigned)
 	(TAC_AUTHOR_REQ_FIXED_FIELDS_SIZE + apak->arg_cnt)) {
-	report(LOG_ERR, "%s: author minimum payload length: %zu, got: %u",
+	report(LOG_ERR, "%s: author minimum payload length: %u, got: %u",
 	       session.peer, TAC_AUTHOR_REQ_FIXED_FIELDS_SIZE + apak->arg_cnt,
 	       ntohl(hdr->datalength));
 	send_error_reply(TAC_PLUS_AUTHOR, NULL);
 	return;
     }
 
-    for (i = 0; i < (int)apak->arg_cnt; i++) {
+    for (i = 0; i < apak->arg_cnt; i++) {
 	len += p[i];
     }
 
@@ -176,7 +176,7 @@ author(u_char *pak)
 
     /* free the input args */
     if (author_data.input_args) {
-	for (i = 0; i < author_data.num_in_args; i++)
+	for (i = 0; i < (unsigned)author_data.num_in_args; i++)
 	    free(author_data.input_args[i]);
 
 	free(author_data.input_args);
@@ -185,7 +185,7 @@ author(u_char *pak)
 
     /* free the output args */
     if (author_data.output_args) {
-	for (i = 0; i < author_data.num_out_args; i++)
+	for (i = 0; i < (unsigned)author_data.num_out_args; i++)
 	    free(author_data.output_args[i]);
 
 	free(author_data.output_args);

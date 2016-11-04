@@ -69,8 +69,8 @@ struct tac_plus_pak_hdr {
 #define	TAC_PLUS_UNENCRYPTED	0x1		/* packet is NOT encrypted   */
 #define	TAC_PLUS_SINGLE_CONNECT_FLAG 0x04
 
-    int session_id;		/* session identifier */
-    int datalength;		/* length of encrypted data following this
+    unsigned session_id;	/* session identifier */
+    unsigned datalength;	/* length of encrypted data following this
 				 * header */
     /* data bytes of encrypted data follows */
 };

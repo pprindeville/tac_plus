@@ -86,6 +86,14 @@
 # include <fcntl.h>
 #endif
 
+#if defined(__GNUC__)
+#define __unused __attribute__ ((unused))
+#define __pformat(fmt_no, arg_no) __attribute__ ((__format__ (__printf__, fmt_no, arg_no) ))
+#else
+#define __unused
+#define __pformat(fmt_no, arg_no)
+#endif
+
 #include "tacacs.h"
 #include "pathsl.h"
 #include "md5.h"
@@ -334,13 +342,9 @@ typedef enum {
 
 extern unsigned ts_format;
 
-void report_string(int, u_char *, int);
-void report_hex(int, u_char *, int);
-#ifdef __STDC__
-void report(int priority, char *fmt, ...);
-#else
-void report();
-#endif
+void report_string(int, u_char *, unsigned);
+void report_hex(int, u_char *, unsigned);
+void report(int priority, char *fmt, ...) __pformat(2, 3);
 
 /* utils.c */
 RETSIGTYPE tac_exit(int);

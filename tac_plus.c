@@ -119,7 +119,7 @@ init(void)
 }
 
 static RETSIGTYPE
-handler(int signum)
+handler(int signum __unused)
 {
     /* report() is not reentrant-safe */
 #define RCVSIG_STR "Received signal\n"
@@ -135,7 +135,7 @@ handler(int signum)
 #if defined(REAPCHILD) && defined(REAPSIGIGN)
 static
 RETSIGTYPE
-reapchild(int notused)
+reapchild(int signum __unused)
 {
 #ifdef UNIONWAIT
     union wait status;
@@ -156,7 +156,7 @@ reapchild(int notused)
 	    report(LOG_DEBUG, "%ld reaped", (long)pid);
     }
 }
-#endif /* REAPCHILD */
+#endif /* REAPCHILD && REAPSIGIGN */
 
 /*
  * Return a socket bound to an appropriate port number/address. Exits
@@ -510,12 +510,12 @@ main(int argc, char **argv)
 	    open_logfile();
 	}
     }
-#if REAPCHILD
-#if REAPSIGIGN
+#if defined(REAPCHILD)
+# if defined(REAPSIGIGN)
     signal(SIGCHLD, reapchild);
-#else
+# else
     signal(SIGCHLD, SIG_IGN);
-#endif
+# endif
 #endif
 
     ostream = NULL;
@@ -607,7 +607,7 @@ main(int argc, char **argv)
     maxsess_loginit();
 #endif /* MAXSESS */
 
-    report(LOG_DEBUG, "uid=%d euid=%d gid=%d egid=%d s=%d",
+    report(LOG_DEBUG, "uid=%u euid=%u gid=%u egid=%u s=%p",
 	   getuid(), geteuid(), getgid(), getegid(), s);
 
     pfds = malloc(sizeof(struct pollfd) * ns);

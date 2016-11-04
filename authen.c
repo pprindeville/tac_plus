@@ -40,7 +40,7 @@ authen(u_char *pak)
 
     /* Must be at least sizeof(struct authen_start) in size */
     if (ntohl(hdr->datalength) < TAC_AUTHEN_START_FIXED_FIELDS_SIZE) {
-	report(LOG_ERR, "%s: authen minimum payload length: %zu, got: %u",
+	report(LOG_ERR, "%s: authen minimum payload length: %u, got: %u",
 	       session.peer, TAC_AUTHEN_START_FIXED_FIELDS_SIZE,
 	       ntohl(hdr->datalength));
 	send_authen_error("Invalid AUTHEN/START packet (too short)");
@@ -48,9 +48,9 @@ authen(u_char *pak)
     }
 
     if ((hdr->seq_no != 1) ||
-	(ntohl(hdr->datalength) != TAC_AUTHEN_START_FIXED_FIELDS_SIZE +
+	(ntohl(hdr->datalength) != (unsigned)(TAC_AUTHEN_START_FIXED_FIELDS_SIZE +
 	 start->user_len + start->port_len + start->rem_addr_len +
-	 start->data_len)) {
+	 start->data_len))) {
 	send_authen_error("Invalid AUTHEN/START packet (check keys)");
 	return;
     }

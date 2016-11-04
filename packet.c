@@ -66,7 +66,7 @@ get_authen_continue(void)
     cont->user_msg_len  = ntohs(cont->user_msg_len);
     cont->user_data_len = ntohs(cont->user_data_len);
 
-    if ((TAC_AUTHEN_CONT_FIXED_FIELDS_SIZE + cont->user_msg_len +
+    if ((unsigned)(TAC_AUTHEN_CONT_FIXED_FIELDS_SIZE + cont->user_msg_len +
 	 cont->user_data_len) != ntohl(hdr->datalength)) {
 	char *m = "Illegally sized authentication cont packet";
 	report(LOG_ERR, "%s: %s", session.peer, m);
@@ -129,7 +129,7 @@ read_packet(void)
 
     /* read the rest of the packet data */
     if (sockread(session.sock, data, ntohl(hdr.datalength),
-		 TAC_PLUS_READ_TIMEOUT) != ntohl(hdr.datalength)) {
+		 TAC_PLUS_READ_TIMEOUT) != (int)ntohl(hdr.datalength)) {
 	report(LOG_ERR, "%s: start_session: bad socket read", session.peer);
 	free(pkt);
 	return(NULL);

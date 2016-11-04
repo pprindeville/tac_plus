@@ -330,7 +330,7 @@ free_attrs(NODE *node)
 	case N_arg:
 	    if (debug & DEBUG_CLEAN_FLAG)
 		report(LOG_DEBUG, "free_cmd_match %s %s",
-		       cfg_nodestring(node->type), node->value);
+		       cfg_nodestring(node->type), (char *)node->value);
 	    break;
 	default:
 	    report(LOG_ERR, "Illegal node type %s for free_attrs",
@@ -358,7 +358,7 @@ free_aclstruct(ACL *acl)
 
     while (next) {
 	if (debug & DEBUG_CLEAN_FLAG)
-	    report(LOG_DEBUG, "free_aclstruct %s %s", acl->name, next->value);
+	    report(LOG_DEBUG, "free_aclstruct %s %s", acl->name, (char *)next->value);
 	if (next->value)
 	    free(next->value);
 	if (next->value1)
@@ -382,7 +382,7 @@ free_cmd_matches(NODE *node)
 	if (debug & DEBUG_CLEAN_FLAG)
 	    report(LOG_DEBUG, "free_cmd_match %s %s",
 		   cfg_nodestring(node->type),
-		   node->value);
+		   (char *)node->value);
 
 	free(node->value);	/* text */
 	free(node->value1);	/* regexp compiled text */
@@ -423,7 +423,7 @@ free_svcs(NODE *node)
 	case N_svc_cmd:
 	    if (debug & DEBUG_CLEAN_FLAG)
 		report(LOG_DEBUG, "free %s %s",
-		       cfg_nodestring(node->type), node->value);
+		       cfg_nodestring(node->type), (char *)node->value);
 	    free(node->value);	/* cmd name */
 	    free_cmd_matches(node->value1);
 	    next = node->next;
@@ -2089,7 +2089,7 @@ cfg_acl_check(char *aclname, char *ip)
 	    if (debug & DEBUG_AUTHEN_FLAG)
 		report(LOG_DEBUG, "ip %s matched %s regex %s of acl filter %s",
 			ip, next->type == S_deny ? "deny" : "permit",
-			next->value, aclname);
+			(char *)next->value, aclname);
 	    return(next->type);
 	}
 	next = next->next;
@@ -2500,7 +2500,7 @@ cfg_ppp_is_configured(char *username, int recurse)
 
 	if (debug & DEBUG_CONFIG_FLAG)
 	    report(LOG_DEBUG, "cfg_ppp_is_configured: found svc ppp %s node",
-		   svc->value1);
+		   (char *)svc->value1);
 
 	return(1);
     }
@@ -2529,7 +2529,7 @@ cfg_ppp_is_configured(char *username, int recurse)
 
 	    if (debug & DEBUG_CONFIG_FLAG)
 		report(LOG_DEBUG, "cfg_ppp_is_configured: found svc ppp %s "
-		       "node", svc->value1);
+		       "node", (char *)svc->value1);
 
 	    return(1);
 	}

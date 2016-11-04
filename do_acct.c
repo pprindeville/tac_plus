@@ -35,7 +35,7 @@ static int acctfd = 0;
 static int
 acct_write(char *string)
 {
-    if (write(acctfd, string, strlen(string)) != strlen(string)) {
+    if (write(acctfd, string, strlen(string)) != (ssize_t) strlen(string)) {
 	report(LOG_ERR, "%s: couldn't write acct file %s %s",
 	       session.peer,
 	       session.acctfile, strerror(errno));
@@ -269,7 +269,7 @@ wtmp_entry(char *line, char *name, char *host, time_t utime)
     close(wtmpfd);
 
     if (debug & DEBUG_ACCT_FLAG) {
-	report(LOG_DEBUG, "wtmp: %s, %s %s %d", line, name, host, utime);
+	report(LOG_DEBUG, "wtmp: %s, %s %s %ld", line, name, host, utime);
     }
 
     return(0);

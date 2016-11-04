@@ -532,7 +532,7 @@ authorize_cmd(char *user, char *cmd, struct author_data *data)
 	    report(LOG_INFO, "line %d compare %s %s '%s' & '%s' %s",
 		   node->line, cmd,
 		   node->type == N_permit ? "permit" : "deny",
-		   node->value, args,
+		   (char *)node->value, args,
 		   (match == REG_NOMATCH ? "no match" :
 			     !match ? "match" : "regex failure"));
 	}
