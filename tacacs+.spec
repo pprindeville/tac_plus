@@ -40,7 +40,8 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 %{__chmod} +x aconf/version.sh
 
 autoreconf -f -i
-%configure --enable-acls --enable-uenable --enable-warn
+%configure --enable-acls --enable-uenable --enable-warn \
+	   --enable-stderr-timestamps
 %{__make}
 
 %install
