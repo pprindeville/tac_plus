@@ -159,6 +159,62 @@ reapchild(int signum __unused)
 #endif /* REAPCHILD && REAPSIGIGN */
 
 /*
+ * Change uid/gid, reset additional group memberships
+ */
+static void
+droproot(const char *user, const char *group)
+{
+    struct passwd *pw;
+    struct group *gr;
+    uid_t uid;
+    gid_t gid;
+
+    uid = gid = -1;
+
+    if (group) {
+	gr = getgrnam(group);
+	if (gr == NULL) {
+	    report(LOG_CRIT, "Could not find group name %s: %s", group,
+		   strerror(errno));
+	    exit(1);
+	}
+	gid = gr->gr_gid;
+	if (user == NULL) {
+	    /* just set group and we're done */
+	    if (!setgid(gid)) {
+		report(LOG_CRIT, "Could not change gid %d: %s", gid,
+		    strerror(errno));
+		exit(1);
+	    }
+	    return;
+	}
+    }
+
+    if (user == NULL)
+	return;
+
+    pw = getpwnam(user);
+    if (pw == NULL) {
+	report(LOG_CRIT, "Could not find username %s: %s", user,
+	       strerror(errno));
+	exit(1);
+    }
+
+    uid = pw->pw_uid;
+    /* it's the user's primary group unless a group was explicitly given */
+    if (!group)
+	gid = pw->pw_gid;
+
+    if (initgroups(pw->pw_name, gid) != 0
+     || setgid(gid) != 0
+     || setuid(uid) != 0) {
+	report(LOG_CRIT, "Cannot set user and group ids to %d,%d: %s",
+	       uid, gid, strerror(errno));
+	exit(1);
+    }
+}
+
+/*
  * Return a socket bound to an appropriate port number/address. Exits
  * the program on failure.
  */
@@ -276,6 +332,7 @@ main(int argc, char **argv)
     FILE *fp;
     int	c, *s, ns, somaxconn;
     struct pollfd *pfds;
+    char *user, *group;
 
 #ifndef SOMAXCONN
 # define SOMAXCONN 64
@@ -571,37 +628,23 @@ main(int argc, char **argv)
 	}
     }
 
-    if (opt_Q) {
-	struct group *gr;
-	if ((gr = getgrnam(opt_Q)) == NULL) {
-	    report(LOG_ERR, "Could set groupid to %s: %s", opt_Q,
-		   strerror(errno));
-        } else if (setgid(gr->gr_gid)) {
-	    report(LOG_ERR, "Cannot set group id to %d %s",
-		   gr->gr_gid, strerror(errno));
-	}
-    }
+    user = group = NULL;
+
+    if (opt_Q)
+	group = opt_Q;
 #ifdef TACPLUS_GROUPID
-      else if (setgid(TACPLUS_GROUPID))
-	report(LOG_ERR, "Cannot set group id to %d %s",
-	       TACPLUS_GROUPID, strerror(errno));
+    else
+	group = TACPLUS_GROUPID;
 #endif
 
-    if (opt_U) {
-	struct passwd *pw;
-	if ((pw = getpwnam(opt_U)) == NULL) {
-	    report(LOG_ERR, "Could not find username %s: %s", opt_U,
-		   strerror(errno));
-	} else if (setuid(pw->pw_uid)) {
-		report(LOG_ERR, "Cannot set user id to %d %s",
-		       pw->pw_uid, strerror(errno));
-	}
-    }
+    if (opt_U)
+        user = opt_U;
 #ifdef TACPLUS_USERID
-      else if (setuid(TACPLUS_USERID))
-	report(LOG_ERR, "Cannot set user id to %d %s",
-	       TACPLUS_USERID, strerror(errno));
+    else
+	user = TACPLUS_USERID;
 #endif
+
+    droproot(user, group);
 
 #ifdef MAXSESS
     maxsess_loginit();
