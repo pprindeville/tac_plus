@@ -59,7 +59,8 @@ pkgpython_PYTHON = do_auth.py
 doc_DATA = users_guide
 
 EXTRA_DIST = CHANGES COPYING FAQ INSTALL $(build_scripts:%=%.in) \
-		 $(man_nogen_MANS) do_auth.py tacacs+.spec users_guide.in
+		 $(man_nogen_MANS) do_auth.py tacacs.spec users_guide.in \
+		 tacacs.service tacacs.logrotate
 
 # '.' is here (and at the front) so that distclean-recursive
 # will run make distclean in . after the other dirs
@@ -99,4 +100,9 @@ users_guide: Makefile $(srcdir)/users_guide.in
 	rm -f users_guide users_guide.tmp; \
 	$(auto_edit) $(srcdir)/users_guide.in >users_guide.tmp; \
 	mv users_guide.tmp users_guide
+
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
+
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status libtool
 

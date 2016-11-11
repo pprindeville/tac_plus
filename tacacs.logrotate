@@ -1,0 +1,6 @@
+/var/log/tac_plus.log {
+	missingok		# If the log file is missing, go on to the next one without issuing an error message
+	notifempty		# Don't do any rotation if the logfile is empty
+	compress		# Compress older files with gzip
+	delaycompress		# Don't compress yesterday's files
+}

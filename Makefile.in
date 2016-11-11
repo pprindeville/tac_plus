@@ -336,6 +336,7 @@ LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -490,7 +491,8 @@ man_MANS = $(man_gen_MANS) $(man_nogen_MANS)
 pkgpython_PYTHON = do_auth.py
 doc_DATA = users_guide
 EXTRA_DIST = CHANGES COPYING FAQ INSTALL $(build_scripts:%=%.in) \
-		 $(man_nogen_MANS) do_auth.py tacacs+.spec users_guide.in
+		 $(man_nogen_MANS) do_auth.py tacacs.spec users_guide.in \
+		 tacacs.service tacacs.logrotate
 
 
 # '.' is here (and at the front) so that distclean-recursive
@@ -1431,6 +1433,9 @@ users_guide: Makefile $(srcdir)/users_guide.in
 	rm -f users_guide users_guide.tmp; \
 	$(auto_edit) $(srcdir)/users_guide.in >users_guide.tmp; \
 	mv users_guide.tmp users_guide
+
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status libtool
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

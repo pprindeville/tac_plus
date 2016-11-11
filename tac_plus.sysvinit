@@ -2,7 +2,7 @@
 #
 # /etc/rc.d/init.d/tac_plus
 #
-# chkconfig: 2345 86 14
+# chkconfig: - 86 14
 # description: TACACS+ Daemon
 
 # Define variables
