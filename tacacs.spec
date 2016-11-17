@@ -46,13 +46,6 @@ Requires(postun): ldconfig
 Terminal server AAA (authentication, authorization, and accounting)
 server originally written by Lol Grant at Cisco.
 
-%package devel
-Summary: Development files
-Provides: %{name}-static = %{version}-%{release}
-
-%description devel
-Development files (headers and libraries).
-
 %prep -n %{name}-%{version}
 %setup -n %{name}-%{version} -q
 
@@ -68,6 +61,7 @@ echo 'echo -n "%{version}"' > aconf/version.sh
 
 autoreconf -f -i
 %configure --enable-acls --enable-uenable --enable-warn \
+	   --enable-static --disable-shared \
 	   --enable-stderr-timestamps
 
 %make_build
@@ -144,15 +138,10 @@ fi
 %{_mandir}/man5/tac_plus.conf.5.gz
 %{_mandir}/man8/tac_pwd.8.gz
 %{_mandir}/man8/tac_plus.8.gz
-%{_libdir}/libtacacs.so.1.0.0
-%{_libdir}/libtacacs.so.1
 %ghost %{_localstatedir}/log/tac_plus.log
 
-%files devel
-
-%{_includedir}/tacacs.h
-%{_libdir}/libtacacs.so
-%{_libdir}/libtacacs.a
+%exclude %{_includedir}/tacacs.h
+%exclude %{_libdir}/libtacacs.a
 %exclude %{_libdir}/libtacacs.la
 
 %changelog
