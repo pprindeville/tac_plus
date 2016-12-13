@@ -47,10 +47,11 @@ authen(u_char *pak)
 	return;
     }
 
-    if ((hdr->seq_no != 1) ||
-	(ntohl(hdr->datalength) != (unsigned)(TAC_AUTHEN_START_FIXED_FIELDS_SIZE +
-	 start->user_len + start->port_len + start->rem_addr_len +
-	 start->data_len))) {
+    /* don't need to check seq_no because read_packet() does that */
+
+    if (ntohl(hdr->datalength) != (unsigned)(TAC_AUTHEN_START_FIXED_FIELDS_SIZE +
+	start->user_len + start->port_len + start->rem_addr_len +
+	start->data_len)) {
 	send_authen_error("Invalid AUTHEN/START packet (check keys)");
 	return;
     }

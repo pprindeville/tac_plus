@@ -823,8 +823,13 @@ start_session(void)
     u_char *pak;
     HDR *hdr;
 
+    /* if the session has TAC_PLUS_SINGLE_CONNECT_FLAG set, then
+     * we'll see the sequence # increase monotonically with each
+     * transaction until the session terminates.
+     */
+    session.seq_no = 0;
+
     do {
-	session.seq_no = 0;
 	session.aborted = 0;
 	session.version = 0;
 

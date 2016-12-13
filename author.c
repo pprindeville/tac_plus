@@ -45,11 +45,7 @@ author(u_char *pak)
     hdr = (HDR *)pak;
     apak = (struct author *)(pak + TAC_PLUS_HDR_SIZE);
 
-    /* Do some sanity checks */
-    if (hdr->seq_no != 1) {
-	send_error_reply(TAC_PLUS_AUTHOR, NULL);
-	return;
-    }
+    /* don't need to check seq_no because read_packet() does that */
 
     /* Check if there's at least sizeof(struct author) of useful data */
     if (ntohl(hdr->datalength) < TAC_AUTHOR_REQ_FIXED_FIELDS_SIZE) {
